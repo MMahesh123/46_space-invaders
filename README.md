@@ -64,6 +64,9 @@ Each task must be completed using an iterative process involving LLM suggestions
 
 > Add basic sound effects for firing, an enemy being destroyed, and the game-over moment.
 
+The sound effects are local generated WAV files in `assets/sounds/`; the game continues
+without audio if the mixer or any sound file is unavailable.
+
 
 ---
 
@@ -83,6 +86,11 @@ Each task must be completed using an iterative process involving LLM suggestions
 space-invaders-main/
 ├── main.py
 ├── requirements.txt
+├── assets/
+│   └── sounds/
+│       ├── enemy_destroyed.wav
+│       ├── fire.wav
+│       └── game_over.wav
 ├── game/
 │   ├── game_engine.py
 │   ├── player.py

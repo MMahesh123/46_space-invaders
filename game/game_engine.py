@@ -1,5 +1,6 @@
 import pygame
 import random
+import os
 from .player import Player
 from .enemy import EnemyGrid
 from .bullet import Bullet
@@ -18,7 +19,44 @@ class GameEngine:
         self.font = pygame.font.SysFont("Arial", 30)
         self.exit_requested = False
         self.difficulty_selection = False
+        self._load_sounds()
         self.reset_game("medium")
+
+    def _load_sounds(self):
+        self.fire_sound = None
+        self.enemy_destroyed_sound = None
+        self.game_over_sound = None
+
+        try:
+            if pygame.mixer.get_init() is None:
+                pygame.mixer.init()
+        except pygame.error:
+            return
+
+        sound_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "assets", "sounds")
+        sound_files = {
+            "fire_sound": "fire.wav",
+            "enemy_destroyed_sound": "enemy_destroyed.wav",
+            "game_over_sound": "game_over.wav",
+        }
+
+        for attribute, filename in sound_files.items():
+            try:
+                setattr(self, attribute, pygame.mixer.Sound(os.path.join(sound_dir, filename)))
+            except (pygame.error, OSError):
+                pass
+
+    def _play_sound(self, sound):
+        if sound is not None:
+            try:
+                sound.play()
+            except pygame.error:
+                pass
+
+    def _set_game_over(self):
+        if not self.game_over:
+            self.game_over = True
+            self._play_sound(self.game_over_sound)
 
     def reset_game(self, difficulty):
         difficulty_settings = {
@@ -65,6 +103,7 @@ class GameEngine:
                 bullet_x = self.player.center_x() - 2
                 self.player_bullets.append(Bullet(bullet_x, self.player.y, direction=-1))
                 self._shoot_cooldown = 15
+                self._play_sound(self.fire_sound)
 
     def handle_input(self):
         if self.game_over or self.difficulty_selection:
@@ -105,6 +144,7 @@ class GameEngine:
                 if bullet.rect().colliderect(enemy.rect()):
                     enemy.alive = False
                     self.score += 1
+                    self._play_sound(self.enemy_destroyed_sound)
                     hit = True
                     break
 
@@ -115,11 +155,11 @@ class GameEngine:
 
         for bullet in self.enemy_bullets:
             if bullet.rect().colliderect(self.player.rect()):
-                self.game_over = True
+                self._set_game_over()
                 break
 
         if self.enemy_grid.reached_bottom(self.player.y):
-            self.game_over = True
+            self._set_game_over()
 
     def render(self, screen):
         pygame.draw.rect(screen, GREEN, self.player.rect())
