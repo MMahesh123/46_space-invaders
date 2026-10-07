@@ -63,18 +63,20 @@ class GameEngine:
         self.player_bullets = [b for b in self.player_bullets if not b.off_screen(self.height)]
         self.enemy_bullets = [b for b in self.enemy_bullets if not b.off_screen(self.height)]
 
-        # NOTE: this removes a bullet from player_bullets while iterating
-        # directly over that same list. Python skips the element right
-        # after a removed one, so when two enemies are hit on the same
-        # frame the second collision can be missed - the bullet appears
-        # to pass straight through. See Task 1 in the README.
+        remaining_bullets = []
         for bullet in self.player_bullets:
+            hit = False
             for enemy in self.enemy_grid.alive_enemies():
                 if bullet.rect().colliderect(enemy.rect()):
                     enemy.alive = False
-                    self.player_bullets.remove(bullet)
                     self.score += 1
+                    hit = True
                     break
+
+            if not hit:
+                remaining_bullets.append(bullet)
+
+        self.player_bullets = remaining_bullets
 
         for bullet in self.enemy_bullets:
             if bullet.rect().colliderect(self.player.rect()):
